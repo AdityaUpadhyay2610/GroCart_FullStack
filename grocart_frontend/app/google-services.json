@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "260045564563",
+    "project_id": "gro-cart-108ed",
+    "storage_bucket": "gro-cart-108ed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260045564563:android:28354c82e3123dd36c7b66",
+        "android_client_info": {
+          "package_name": "com.example.first"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhJ70TAR3Aak76_H90qMMY5tjxhz4EYtk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

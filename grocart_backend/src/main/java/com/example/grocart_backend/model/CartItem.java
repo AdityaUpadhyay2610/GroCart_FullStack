@@ -2,11 +2,9 @@ package com.example.grocart_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
 @Table(name = "cart_items")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class CartItem {
 
     @Id
@@ -17,20 +15,49 @@ public class CartItem {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Matches Android SerialName "stringResourceId"
     @JsonProperty("stringResourceId")
     @Column(name = "item_name")
     private String itemName;
 
-    // Matches Android SerialName "item_price"
     @JsonProperty("item_price")
     @Column(name = "item_price")
     private Integer itemPrice;
 
-    // Matches Android SerialName "imageResourceId"
     @JsonProperty("imageResourceId")
     @Column(name = "image_url")
     private String imageUrl;
 
     private Integer quantity;
+
+    // Default Constructor
+    public CartItem() {}
+
+    // All-Args Constructor
+    public CartItem(Long id, User user, String itemName, Integer itemPrice, String imageUrl, Integer quantity) {
+        this.id = id;
+        this.user = user;
+        this.itemName = itemName;
+        this.itemPrice = itemPrice;
+        this.imageUrl = imageUrl;
+        this.quantity = quantity;
+    }
+
+    // --- MANUAL GETTERS AND SETTERS ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public String getItemName() { return itemName; }
+    public void setItemName(String itemName) { this.itemName = itemName; }
+
+    public Integer getItemPrice() { return itemPrice; }
+    public void setItemPrice(Integer itemPrice) { this.itemPrice = itemPrice; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
 }
