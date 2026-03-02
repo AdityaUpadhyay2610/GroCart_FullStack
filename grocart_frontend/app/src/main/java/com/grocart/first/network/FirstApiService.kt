@@ -19,7 +19,7 @@ data class UserResponse(val id: Long, val username: String, val email: String)
 data class CartRequest(val userId: Long, val itemName: String, val itemPrice: Int, val imageUrl: String, val quantity: Int = 1)
 
 // ✅ RETROFIT SETUP
-private const val BASE_URL = "http://10.0.2.2:8080"
+private const val BASE_URL = "https://grocart-fullstack.onrender.com"
 private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
 
