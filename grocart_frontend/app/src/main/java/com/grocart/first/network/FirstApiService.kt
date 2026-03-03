@@ -6,7 +6,6 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.http.*
@@ -54,7 +53,7 @@ interface FirstApiService {
 
     // MySQL Cart & Orders
     @POST("api/cart/add")
-    suspend fun addToCart(@Body item: CartRequest): Response<String>
+    suspend fun addToCart(userId: Long, @Body item: InternetItem): Response<String>
 
     @GET("api/cart/{userId}")
     suspend fun getUserCart(@Path("userId") userId: Long): Response<List<InternetItem>>

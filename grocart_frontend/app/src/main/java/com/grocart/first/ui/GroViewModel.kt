@@ -151,7 +151,7 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         val userId = _user.value?.id ?: return
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = FirstApi.retrofitService.addCartItem(userId, item)
+                val response = FirstApi.retrofitService.addToCart(userId, item)
                 if (response.isSuccessful) {
                     _cartItems.update { it + item }
                 }
