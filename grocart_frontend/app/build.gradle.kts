@@ -1,9 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.compose") // ✅ New required Compose plugin
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
-
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     id("com.google.gms.google-services")
 }
 
@@ -36,73 +35,61 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
 
     buildFeatures {
         compose = true
     }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.13" // ✅ Must match your Compose BOM version
-    }
 }
 
 dependencies {
-    // Jetpack Compose BOM (Bill of Materials)
-    // यह सभी Compose लाइब्रेरी के वर्शन को मैनेज करेगा।
-    implementation(platform("androidx.compose:compose-bom:2024.04.01"))
+    implementation(platform(libs.androidx.compose.bom))
 
-    // Core & Lifecycle
-    implementation("androidx.core:core-ktx")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx")
-    implementation("androidx.activity:activity-compose")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
 
-    // Compose UI & Material3
-    // BOM का उपयोग करते समय वर्शन नंबर नहीं देना है।
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3") // सिर्फ एक बार इसे जोड़ें
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.material3)
 
-    // Material Icons
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.material.icons.core)
+    implementation(libs.androidx.material.icons.extended)
 
-    // Navigation & ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3") // वर्शन को स्टेबल किया
-    implementation("androidx.navigation:navigation-compose:2.7.7") // वर्शन को स्टेबल किया
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
 
-    // Retrofit (API calls)
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.scalars)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
 
     // Kotlinx Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // स्टेबल वर्शन
+    implementation(libs.kotlinx.serialization.json)
 
-    // Coil (Image Loading)
-    implementation("io.coil-kt:coil-compose:2.6.0") // लेटेस्ट स्टेबल वर्शन
+    // OkHttp
+    implementation(libs.okhttp.logging.interceptor)
 
+    // Coil
+    implementation(libs.coil.compose)
 
     // DataStore
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-    implementation(libs.androidx.recyclerview)
-//    implementation(libs.firebase.auth.ktx) // लेटेस्ट स्टेबल वर्शन
+    implementation(libs.androidx.datastore.preferences)
 
-    // Debugging Tools
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // Others
+    // implementation(libs.androidx.recyclerview) // If needed, add to catalog
 
-    // Testing
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.04.01"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 }
-
-
-

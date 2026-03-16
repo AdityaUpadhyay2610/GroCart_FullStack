@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,7 +57,13 @@ fun ItemScreen(
 
     val database = remember(items, selectedCategory) {
         if (items.isEmpty()) emptyList()
-        else items.filter { it.itemCategory.trim().equals(selectedCategory.trim(), ignoreCase = true) }
+        else items.filter { 
+            val dbCat = it.itemCategory.trim()
+            val uiCat = selectedCategory.trim()
+            dbCat.equals(uiCat, ignoreCase = true) || 
+            uiCat.contains(dbCat, ignoreCase = true) || 
+            dbCat.contains(uiCat, ignoreCase = true)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -142,8 +149,11 @@ fun ItemCard(
 ) {
     val context = LocalContext.current
 
-    Column(modifier = Modifier.width(150.dp).padding(15.dp)) {
-        Card(colors = CardDefaults.cardColors(containerColor = Color(249,219,242,50))) {
+    Column(modifier = Modifier.width(150.dp).padding(8.dp)) {
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
             Box {
                 AsyncImage(
                     model = imageUrl,
@@ -151,8 +161,11 @@ fun ItemCard(
                     modifier = Modifier.fillMaxWidth().height(110.dp)
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Card(colors = CardDefaults.cardColors(containerColor = Color(244, 67, 54, 255))) {
-                        Text(text = "25% off", fontSize = 15.sp, modifier = Modifier.padding(horizontal = 5.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(244, 67, 54, 255)),
+                        shape = RoundedCornerShape(bottomStart = 8.dp)
+                    ) {
+                        Text(text = "25% off", fontSize = 12.sp, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                 }
             }
@@ -182,9 +195,10 @@ fun ItemCard(
 
                 Toast.makeText(context, "Added to Cart", Toast.LENGTH_SHORT).show()
             },
-            colors = CardDefaults.cardColors(containerColor = Color(57, 68, 179, 135))
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text(text = "Add to Cart", fontSize = 18.sp, color = Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+            Text(text = "Add to Cart", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
         }
     }
 }

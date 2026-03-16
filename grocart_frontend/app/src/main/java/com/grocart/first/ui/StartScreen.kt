@@ -102,10 +102,11 @@ fun CategoryCard(
             Toast.makeText(context, "$categoryName selected", Toast.LENGTH_SHORT).show()
             onCategoryClicked(stringResourceId)
         },
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(217, 213, 213, 157)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        modifier = Modifier,
+        modifier = Modifier.padding(4.dp),
     ) {
         Column(
             modifier = Modifier

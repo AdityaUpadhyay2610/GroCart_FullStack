@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Security & Credentials
+serviceAccountKey.json
+firebase-admin*.json
+*.pem
+*.key
+.env
+application-secret.properties
+application-dev.properties

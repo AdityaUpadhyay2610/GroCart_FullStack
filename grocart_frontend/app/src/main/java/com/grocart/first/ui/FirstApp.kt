@@ -30,6 +30,7 @@ import com.grocart.first.R
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import com.grocart.first.data.CartItemResponse
 import com.grocart.first.data.DataSource
 
 /** Enum class to define available screens and their titles */
@@ -240,39 +241,51 @@ fun PredictiveResultList(
 fun FirstAppBar(
     navController: NavHostController,
     currentScreen: GroAppScreen,
-    cartItems: List<InternetItem>,
+    cartItems: List<CartItemResponse>,
     groViewModel: GroViewModel
 ) {
     val isGuest by groViewModel.isGuestSession.collectAsState()
     var showLoginPrompt by remember { mutableStateOf(false) }
 
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 40.dp, vertical = 10.dp)
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 8.dp
     ) {
-        AppNavItem(Icons.Outlined.Home, "Home") {
-            navController.navigate(GroAppScreen.Start.name) { popUpTo(0) }
-        }
+        NavigationBarItem(
+            icon = { Icon(Icons.Outlined.Home, "Home") },
+            label = { Text("Home") },
+            selected = currentScreen == GroAppScreen.Start,
+            onClick = { navController.navigate(GroAppScreen.Start.name) { popUpTo(0) } }
+        )
 
-        AppNavItem(Icons.AutoMirrored.Outlined.List, "Orders") {
-            if (isGuest) showLoginPrompt = true
-            else navController.navigate(GroAppScreen.Orders.name) { popUpTo(0) }
-        }
-
-        Box(modifier = Modifier.clickable { navController.navigate(GroAppScreen.Cart.name) }) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Outlined.ShoppingCart, "Cart")
-                Text("Cart", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        NavigationBarItem(
+            icon = { Icon(Icons.AutoMirrored.Outlined.List, "Orders") },
+            label = { Text("Orders") },
+            selected = currentScreen == GroAppScreen.Orders,
+            onClick = {
+                if (isGuest) showLoginPrompt = true
+                else navController.navigate(GroAppScreen.Orders.name) { popUpTo(0) }
             }
-            if (cartItems.isNotEmpty()) {
-                Badge(containerColor = Color.Red, modifier = Modifier.align(Alignment.TopEnd)) {
-                    Text(cartItems.size.toString(), color = Color.White)
+        )
+
+        NavigationBarItem(
+            icon = {
+                BadgedBox(
+                    badge = {
+                        if (cartItems.isNotEmpty()) {
+                            Badge(containerColor = Color.Red) {
+                                Text(cartItems.size.toString(), color = Color.White)
+                            }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Outlined.ShoppingCart, "Cart")
                 }
-            }
-        }
+            },
+            label = { Text("Cart") },
+            selected = currentScreen == GroAppScreen.Cart,
+            onClick = { navController.navigate(GroAppScreen.Cart.name) }
+        )
     }
 
     if (showLoginPrompt) {

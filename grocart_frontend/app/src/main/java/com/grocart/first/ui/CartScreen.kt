@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -20,7 +21,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.grocart.first.R
+import com.grocart.first.data.CartItemResponse
 import com.grocart.first.data.InternetItem
-import com.grocart.first.data.InternetItemWithQuantity
 import kotlinx.coroutines.delay
 
 @Composable
@@ -41,12 +44,6 @@ fun CartScreen(
     val cartItems by groViewModel.cartItems.collectAsState()
     val showPaymentScreen by groViewModel.showPaymentScreen.collectAsState()
 
-    val cartItemsWithQuantity = cartItems
-        .groupBy { it.itemName }
-        .map { (_, items) ->
-            InternetItemWithQuantity(items.first(), items.size)
-        }
-
     Box(modifier = Modifier.fillMaxSize()) {
         if (cartItems.isNotEmpty()) {
             LazyColumn(
@@ -57,17 +54,21 @@ fun CartScreen(
                     Text(
                         text = "Review Items",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
+                        fontSize = 22.sp,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
-                items(cartItemsWithQuantity) { itemWithQuantity ->
+                items(cartItems) { item ->
                     CartCard(
-                        item = itemWithQuantity.internetItem,
-                        quantity = itemWithQuantity.quantity,
-                        // Fix: Using local cart methods instead of Database
-                        onAddItem = { groViewModel.addToCart(itemWithQuantity.internetItem) },
-                        onRemoveItem = { groViewModel.decreaseItemCount(itemWithQuantity.internetItem) }
+                        item = item,
+                        quantity = item.quantity,
+                        onAddItem = { 
+                            // Rehydrate the internetItem data for the backend payload
+                            val baseItem = InternetItem(itemName = item.itemName, itemPrice = item.itemPrice, imageUrl = item.imageUrl)
+                            groViewModel.addToCart(baseItem) 
+                        },
+                        onRemoveItem = { groViewModel.decreaseItemCount(item) }
                     )
                 }
 
@@ -76,35 +77,43 @@ fun CartScreen(
                     Text(
                         text = "Bill Details",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
+                        fontSize = 22.sp,
+                        modifier = Modifier.padding(top = 16.dp),
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
-                val totalPrice = cartItems.sumOf { it.itemPrice * 75 / 100 }
-                val handlingCharge = totalPrice * 1 / 100
+                val totalPrice = cartItems.sumOf { (it.itemPrice * 75 / 100) * it.quantity }
+                val handlingCharge = (totalPrice * 0.01).toInt()
                 val deliveryFee = 30
                 val grandTotal = totalPrice + handlingCharge + deliveryFee
 
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             BillRow("Item Total", totalPrice, FontWeight.Normal)
                             BillRow("Handling Charge", handlingCharge, FontWeight.Light)
                             BillRow("Delivery Fee", deliveryFee, FontWeight.Light)
                             HorizontalDivider(
                                 thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                color = Color.LightGray
+                                modifier = Modifier.padding(vertical = 12.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
                             )
-                            BillRow(" To Pay", grandTotal, FontWeight.ExtraBold)
-                            FilledTonalButton(
+                            BillRow("To Pay", grandTotal, FontWeight.ExtraBold)
+                            Button(
                                 onClick = { groViewModel.proceedToPay() },
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                                modifier = Modifier.fillMaxWidth().padding(top = 24.dp).height(50.dp),
+                                shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Proceed to Pay")
+                                Text("Proceed to Pay", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(100.dp)) // Avoid nav bar overlap
                 }
             }
         } else {
@@ -115,8 +124,8 @@ fun CartScreen(
             FakePaymentScreen(
                 groViewModel = groViewModel,
                 onPaymentComplete = {
-                    val totalPrice = cartItems.sumOf { it.itemPrice * 75 / 100 }
-                    val handlingCharge = totalPrice * 1 / 100
+                    val totalPrice = cartItems.sumOf { (it.itemPrice * 75 / 100) * it.quantity }
+                    val handlingCharge = (totalPrice * 0.01).toInt()
                     val deliveryFee = 30
                     val grandTotal = totalPrice + handlingCharge + deliveryFee
 
@@ -129,6 +138,7 @@ fun CartScreen(
         }
     }
 }
+
 // ✅ EMPTY CART UI
 @Composable
 fun EmptyCartUI(onHomeButtonClicked: () -> Unit) {
@@ -145,47 +155,65 @@ fun EmptyCartUI(onHomeButtonClicked: () -> Unit) {
         Text(
             text = "Your Cart is Empty",
             fontWeight = FontWeight.ExtraBold,
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(20.dp)
         )
-        FilledTonalButton(onClick = onHomeButtonClicked) {
-            Text(text = "Browse Products")
+        Button(
+            onClick = onHomeButtonClicked,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text(text = "Browse Products", fontSize = 16.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
         }
     }
 }
+
 // ✅ CART CARD
 @Composable
 fun CartCard(
-    item: InternetItem,
+    item: CartItemResponse,
     quantity: Int,
     onAddItem: () -> Unit,
     onRemoveItem: () -> Unit
 ) {
     val lineItemTotalPrice = (item.itemPrice * 75 / 100) * quantity
 
-    Row(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        AsyncImage(
-            model = item.imageUrl,
-            contentDescription = item.itemName,
-            modifier = Modifier.size(80.dp).padding(end = 8.dp)
-        )
-        Column(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-            Text(text = item.itemName, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-            Text(text = "Rs. ${item.itemPrice * 75 / 100} / each", fontSize = 14.sp, fontWeight = FontWeight.Light)
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            QuantitySelector(quantity = quantity, onAddItem = onAddItem, onRemoveItem = onRemoveItem)
-            Text(
-                text = "Rs. $lineItemTotalPrice",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = item.itemName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                Text(text = item.itemName, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = "Rs. ${item.itemPrice * 75 / 100} / each", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                QuantitySelector(quantity = quantity, onAddItem = onAddItem, onRemoveItem = onRemoveItem)
+                Text(
+                    text = "Rs. $lineItemTotalPrice",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
+
 // ✅ QUANTITY SELECTOR
 @Composable
 fun QuantitySelector(
@@ -196,28 +224,26 @@ fun QuantitySelector(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(20.dp))
+            .padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
-        OutlinedIconButton(
+        IconButton(
             onClick = onRemoveItem,
-            modifier = Modifier.size(32.dp),
-            shape = CircleShape,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+            modifier = Modifier.size(32.dp)
         ) {
             Icon(Icons.Default.Remove, contentDescription = "Remove", tint = MaterialTheme.colorScheme.primary)
         }
-        Text(text = "$quantity", fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
-        OutlinedIconButton(
+        Text(text = "$quantity", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp), textAlign = TextAlign.Center)
+        IconButton(
             onClick = onAddItem,
-            modifier = Modifier.size(32.dp),
-            shape = CircleShape,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+            modifier = Modifier.size(32.dp)
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add", tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
+
 // ✅ FAKE PAYMENT SCREEN
 @Composable
 fun FakePaymentScreen(
@@ -230,7 +256,7 @@ fun FakePaymentScreen(
     var isPaymentFinished by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        for (i in 10 downTo 1) {
+        for (i in 5 downTo 1) { // Sped up the animation a bit
             groViewModel.setPaymentCountdown(i)
             delay(1000)
         }
@@ -241,21 +267,31 @@ fun FakePaymentScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.8f)).clickable(enabled = false) {},
+        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)).clickable(enabled = false) {},
         contentAlignment = Alignment.Center
     ) {
-        Card(modifier = Modifier.fillMaxWidth(0.8f).padding(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-            Column(modifier = Modifier.fillMaxWidth().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Card(
+            modifier = Modifier.fillMaxWidth(0.85f).padding(20.dp), 
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 if (!isPaymentFinished) {
                     AnimatedContent(targetState = countdown, label = "") { targetCount ->
-                        Text(text = "$targetCount", fontSize = 48.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(text = "$targetCount", fontSize = 56.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                     }
                 } else {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF008069), modifier = Modifier.size(48.dp))
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF00C853), modifier = Modifier.size(64.dp))
                 }
-                Text(text = paymentStatus, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text(text = paymentStatus, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurface)
                 if (!isPaymentFinished) {
-                    TextButton(onClick = onPaymentCancelled) { Text("Cancel") }
+                    OutlinedButton(
+                        onClick = onPaymentCancelled,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) { 
+                        Text("Cancel Checkout") 
+                    }
                 }
             }
         }
@@ -265,8 +301,8 @@ fun FakePaymentScreen(
 // Helper function for Billing
 @Composable
 fun BillRow(itemName: String, itemPrice: Int, fontWeight: FontWeight) {
-    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-        Text(text = itemName, fontWeight = fontWeight)
-        Text(text = "Rs. $itemPrice", fontWeight = fontWeight)
+    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Text(text = itemName, fontWeight = fontWeight, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = "Rs. $itemPrice", fontWeight = fontWeight, color = MaterialTheme.colorScheme.onSurface)
     }
 }

@@ -30,8 +30,8 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
     private val _allItems = MutableStateFlow<List<InternetItem>>(emptyList())
     val allItems: StateFlow<List<InternetItem>> = _allItems.asStateFlow()
 
-    private val _cartItems = MutableStateFlow<List<InternetItem>>(emptyList())
-    val cartItems: StateFlow<List<InternetItem>> = _cartItems.asStateFlow()
+    private val _cartItems = MutableStateFlow<List<com.grocart.first.data.CartItemResponse>>(emptyList())
+    val cartItems: StateFlow<List<com.grocart.first.data.CartItemResponse>> = _cartItems.asStateFlow()
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -99,7 +99,7 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
     // Logic to get filtered results
     fun getFilteredItems(query: String): List<InternetItem> {
         return if (query.trim().isEmpty()) {
-            emptyList()
+            _allItems.value // Return everything if not searching
         } else {
             _allItems.value.filter {
                 it.itemName.contains(query, ignoreCase = true) ||
@@ -151,9 +151,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         val userId = _user.value?.id ?: return
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = FirstApi.retrofitService.addToCart(userId, item)
+                val response = FirstApi.retrofitService.addCartItem(userId, item)
                 if (response.isSuccessful) {
-                    _cartItems.update { it + item }
+                    loadUserCart() // Reload cart from server to get correct counts and ids
                 }
             } catch (e: Exception) {
                 Log.e("GROCART_DEBUG", "Add Cart error: ${e.message}")
@@ -244,11 +244,19 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
 
     // Function to removed the item from cart when payment animation will end
     // and update the cart and added to order screen
-    fun decreaseItemCount(item: InternetItem) {
+    // Function to remove the item from cart and update counts locally or refresh
+    fun decreaseItemCount(item: com.grocart.first.data.CartItemResponse) {
         _cartItems.update { current ->
             val list = current.toMutableList()
             val idx = list.indexOfFirst { it.itemName == item.itemName }
-            if (idx != -1) list.removeAt(idx)
+            if (idx != -1) {
+                val existing = list[idx]
+                if (existing.quantity > 1) {
+                    list[idx] = existing.copy(quantity = existing.quantity - 1)
+                } else {
+                    list.removeAt(idx)
+                }
+            }
             list
         }
     }

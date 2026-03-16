@@ -8,13 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/android/grocery_delivery_app")
 public class ItemController {
 
     @Autowired
     private ItemRepository repository;
 
-    @GetMapping("/items")
+    @GetMapping("/items.json")
     public List<InternetItem> getAllItems() {
         return repository.findAll();
     }

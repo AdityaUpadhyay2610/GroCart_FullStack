@@ -80,7 +80,7 @@ fun OrderCard(order: Order) {
         .groupBy { it.itemName } // Group by name (or a unique ID if you have one)
         .map { (_, items) ->
             // For each group, create an object with the item and its count
-            com.grocart.first.data.InternetItemWithQuantity(items.first(), items.size)
+            com.grocart.first.data.InternetItemWithQuantity(items.first().toInternetItem(), items.size)
         }
 
     // Calculate the total price of this specific order
