@@ -26,7 +26,7 @@ fun LoginUi(groViewModel: GroViewModel) {
     var email by remember { mutableStateOf("") }
 
     val isLoading by groViewModel.loading.collectAsState()
-    val context = LocalContext.current // Context for Toasts
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -48,7 +48,7 @@ fun LoginUi(groViewModel: GroViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Username Field
+
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
@@ -57,7 +57,6 @@ fun LoginUi(groViewModel: GroViewModel) {
             singleLine = true
         )
 
-        // Email Field (Visible only in Signup Mode)
         if (isSignupMode) {
             Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
@@ -71,13 +70,13 @@ fun LoginUi(groViewModel: GroViewModel) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Password Field with Masking
+
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(), // Password chupaane ke liye
+            visualTransformation = PasswordVisualTransformation(),
             singleLine = true
         )
 
@@ -93,7 +92,6 @@ fun LoginUi(groViewModel: GroViewModel) {
                     } else {
                         if (isSignupMode) {
                             groViewModel.register(username, email, password)
-                            // Switch back to login after successful hit (Optional)
                         } else {
                             groViewModel.login(username, password)
                         }
@@ -108,12 +106,10 @@ fun LoginUi(groViewModel: GroViewModel) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Switch between Login and Signup
         TextButton(onClick = { isSignupMode = !isSignupMode }) {
             Text(if (isSignupMode) "Already have an account? Login" else "New here? Create Account")
         }
 
-        // Guest mode options
         TextButton(onClick = { groViewModel.startGuestSession() }) {
             Text("Continue as Guest", color = Color.Gray)
         }

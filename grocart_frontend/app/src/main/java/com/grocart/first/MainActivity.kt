@@ -19,12 +19,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.grocart.first.ui.FirstApp
 import com.grocart.first.ui.GroViewModel
-import com.grocart.first.data.SessionManager // Ensure this is imported
+import com.grocart.first.data.SessionManager
 import com.grocart.first.ui.theme.GrocartFirstTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) // Move this to the top
+        super.onCreate(savedInstanceState)
 
         val sessionManager = SessionManager(this)
 
@@ -46,7 +46,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Your main UI entry point
                     FirstApp(groViewModel = groViewModel)
                 }
             }

@@ -1,10 +1,9 @@
 package com.grocart.first.data
 
 import kotlinx.serialization.Serializable
-
-// ✅ REST API Models for Firestore
 @Serializable
 data class FirestoreResponse(val documents: List<FirestoreDocument> = emptyList())
+
 
 @Serializable
 data class FirestoreDocument(val name: String, val fields: FirestoreFields) {
@@ -34,8 +33,6 @@ data class FirestoreStringValue(val stringValue: String)
 
 @Serializable
 data class FirestoreIntegerValue(val integerValue: String)
-
-// ✅ SERIALIZABLE CLASSES FOR ITEMS AND ORDERS
 @Serializable
 data class InternetItem(
     val id: Long = 0L,

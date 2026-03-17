@@ -41,7 +41,6 @@ enum class GroAppScreen(val title: String) {
     Orders("My Orders")
 }
 
-// Global variable for back navigation
 var canNavigateBack = false
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,11 +49,9 @@ fun FirstApp(
     groViewModel: GroViewModel = viewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
-    // Search State for Predictive Search
     var searchQuery by remember { mutableStateOf("") }
     val context = LocalContext.current
 
-    // Collect states from MySQL-based ViewModel
     val user by groViewModel.user.collectAsState()
     val logoutClicked by groViewModel.logoutClicked.collectAsState()
     val cartItems by groViewModel.cartItems.collectAsState()
@@ -67,7 +64,6 @@ fun FirstApp(
 
     canNavigateBack = navController.previousBackStackEntry != null
 
-    // Login logic updated to check MySQL user
     if (user == null && !isGuest) {
         LoginUi(groViewModel = groViewModel)
     } else {
@@ -98,7 +94,6 @@ fun FirstApp(
                                     }
                                 }
 
-                                // Logout trigger
                                 Row(modifier = Modifier.clickable { groViewModel.setLogoutClicked(true) }) {
                                     Icon(painter = painterResource(R.drawable.logout), contentDescription = "Logout", modifier = Modifier.size(24.dp))
                                     Text(text = "Logout", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 2.dp))
@@ -114,7 +109,6 @@ fun FirstApp(
                         }
                     )
 
-                    // --- BLINKIT STYLE SEARCH BAR ---
                     if (currentScreen == GroAppScreen.Start || currentScreen == GroAppScreen.Item) {
                         OutlinedTextField(
                             value = searchQuery,
@@ -166,7 +160,6 @@ fun FirstApp(
                     }
                 }
 
-                // --- PREDICTIVE SEARCH OVERLAY ---
                 if (searchQuery.isNotEmpty()) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
@@ -175,26 +168,19 @@ fun FirstApp(
                         PredictiveResultList(
                             query = searchQuery,
                             groViewModel = groViewModel,
-                            // Inside your PredictiveResultList onItemClick in FirstApp.kt
                             onItemClick = { item ->
                                 searchQuery = "" // Reset search bar
 
-                                // 1. Get the list of categories from your DataSource
                                 val categoryList = DataSource.loadCategories()
-
-                                // 2. Find the category where the name matches your item's category
-                                // We use context.getString to compare the actual text names
 
                                 val matchedCategory = categoryList.find { cat ->
                                     context.getString(cat.stringResourceId) == item.itemCategory
                                 }
 
                                 if (matchedCategory != null) {
-                                    // Pass the valid Resource ID (e.g., 2131886123) instead of 0
                                     groViewModel.updateSelectedCategory(matchedCategory.stringResourceId)
                                     navController.navigate(GroAppScreen.Item.name)
                                 } else {
-                                    // Safety: If no match is found, don't navigate or use a default
                                     Log.e("GROCART_ERROR", "Category name ${item.itemCategory} not found in DataSource")
                                 }
                             }

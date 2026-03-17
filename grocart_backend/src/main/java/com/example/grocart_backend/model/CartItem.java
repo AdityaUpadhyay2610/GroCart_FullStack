@@ -25,10 +25,8 @@ public class CartItem {
 
     private Integer quantity;
 
-    // Default Constructor
     public CartItem() {}
 
-    // All-Args Constructor
     public CartItem(Long id, User user, String itemName, Integer itemPrice, String imageUrl, Integer quantity) {
         this.id = id;
         this.user = user;
@@ -38,7 +36,6 @@ public class CartItem {
         this.quantity = quantity;
     }
 
-    // --- MANUAL GETTERS AND SETTERS ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

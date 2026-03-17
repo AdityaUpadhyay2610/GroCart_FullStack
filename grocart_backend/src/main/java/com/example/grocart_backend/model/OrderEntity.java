@@ -12,14 +12,13 @@ public class OrderEntity {
 
     private Long userId;
     private Integer totalAmount;
+    @Column(columnDefinition = "TEXT")
     private String itemDetails;
 
     private Timestamp orderDate = new Timestamp(System.currentTimeMillis());
 
-    // Default Constructor
     public OrderEntity() {}
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -30,8 +29,7 @@ public class OrderEntity {
     public void setTotalAmount(Integer totalAmount) { this.totalAmount = totalAmount; }
 
     public Timestamp getOrderDate() { return orderDate; }
-    public void setOrderDate(Timestamp orderDate) { this.orderDate = orderDate; }@Column(columnDefinition = "TEXT")
-
+    public void setOrderDate(Timestamp orderDate) { this.orderDate = orderDate; }
 
     public String getItemDetails() { return itemDetails; }
     public void setItemDetails(String itemDetails) { this.itemDetails = itemDetails; }

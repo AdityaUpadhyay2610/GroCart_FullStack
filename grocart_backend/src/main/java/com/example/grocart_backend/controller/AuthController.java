@@ -5,7 +5,7 @@ import com.example.grocart_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Import this
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -18,10 +18,16 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    // Inject the BCrypt bean we defined in SecurityConfig
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    /**
+     * Registers a new user with an encrypted password.
+     * Validates username existence before saving.
+     *
+     * @param user The user details to be registered.
+     * @return ResponseEntity with success or error message.
+     */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
 
@@ -33,7 +39,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: Username already taken!");
         }
 
-        // HASH the password before saving to MySQL
         String hashedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
 
@@ -41,6 +46,12 @@ public class AuthController {
         return ResponseEntity.ok(Collections.singletonMap("message", "User registered successfully"));
     }
 
+    /**
+     * Authenticates a user by checking the provided credentials against the stored hash.
+     *
+     * @param user The user credentials for login.
+     * @return ResponseEntity containing user details if successful, or error status.
+     */
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User user) {
 
@@ -49,7 +60,6 @@ public class AuthController {
         if (userOptional.isPresent()) {
             User dbUser = userOptional.get();
 
-            // USE matches() to compare raw password with the hash in DB
             if (passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
                 System.out.println("Login Successful for user: " + dbUser.getUsername());
                 return ResponseEntity.ok(dbUser);

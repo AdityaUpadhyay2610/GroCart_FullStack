@@ -2,28 +2,41 @@ package com.grocart.first.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 class SessionManager(context: Context) {
-    // ✅ SHARED PREFERENCES FOR USER SESSION
     private val prefs: SharedPreferences = context.getSharedPreferences("GroCartPrefs", Context.MODE_PRIVATE)
 
 
-    // ✅ FUNCTION TO SAVE USER SESSION
+    /**
+     * Saves user session details to SharedPreferences.
+     * @param userId ID of the logged-in user.
+     * @param username Username.
+     */
     fun saveUserSession(userId: Long, username: String) {
-        val editor = prefs.edit()
-        editor.putLong("USER_ID", userId)
-        editor.putString("USERNAME", username)
-        editor.apply()
+        prefs.edit {
+            putLong("USER_ID", userId)
+            putString("USERNAME", username)
+        }
     }
 
 
-    // ✅ FUNCTION TO GET USER SESSION
+    /**
+     * Gets the current user ID.
+     * @return User ID or -1 if not logged in.
+     */
     fun getUserId(): Long = prefs.getLong("USER_ID", -1L)
-    // ✅ FUNCTION TO GET USERNAME
+
+    /**
+     * Gets the current user name.
+     * @return Username or null if not logged in.
+     */
     fun getUsername(): String? = prefs.getString("USERNAME", null)
 
 
-    // ✅ FUNCTION TO LOGOUT
+    /**
+     * Clears all session data, effectively logging out the user.
+     */
     fun logout() {
         prefs.edit().clear().apply()
     }

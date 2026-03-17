@@ -21,10 +21,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
-    // ✅ State variables for the UI
     private val _user = MutableStateFlow<UserResponse?>(null)
     val user: StateFlow<UserResponse?> = _user.asStateFlow()
-//    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
 
     private val _allItems = MutableStateFlow<List<InternetItem>>(emptyList())
@@ -75,7 +73,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
     }
 
-    //Function for Session checking
+    /**
+     * Checks if a user session exists and loads it into state.
+     */
     private fun checkExistingSession() {
         val savedId = sessionManager.getUserId()
         val savedName = sessionManager.getUsername()
@@ -85,7 +85,10 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
 
     }
-    //function for trigering the animation in Item Screen When item is added to Cart.
+    /**
+     * Triggers the add-to-cart animation in the Item Screen.
+     * @param item The item being added.
+     */
     fun triggerAddToCartAnimation(item: InternetItem) {
         _animatingItem.value = item
         viewModelScope.launch {
@@ -96,7 +99,10 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
 
 
 
-    // Logic to get filtered results
+    /**
+     * Returns a list of items filtered by the search query.
+     * @param query The search term.
+     */
     fun getFilteredItems(query: String): List<InternetItem> {
         return if (query.trim().isEmpty()) {
             _allItems.value // Return everything if not searching
@@ -108,7 +114,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
     }
 
-    //function to Display Items in Cart and sync to MySQl database
+    /**
+     * Loads the cart items for the current user from the backend.
+     */
     fun loadUserCart() {
         val userId = sessionManager.getUserId()
         if (userId == -1L) return
@@ -126,7 +134,10 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
             }
         }
     }
-    //function to place order and sync to MySQL
+    /**
+     * Places an order and clears the cart on the backend.
+     * @param total The total amount for the order.
+     */
     fun placeOrder(total: Int) {
         val userId = sessionManager.getUserId()
 
@@ -146,7 +157,10 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
     }
 
-    //Function to add item in cart
+    /**
+     * Adds an item to the user's cart on the database and reloads the cart.
+     * @param item The item to add.
+     */
     fun addToCart(item: InternetItem) {
         val userId = _user.value?.id ?: return
         viewModelScope.launch(Dispatchers.IO) {
@@ -161,7 +175,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
     }
 
-    //function to get items by search in items screen
+    /**
+     * Fetches the initial list of items.
+     */
     fun getFirstItem() {
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) { itemUiState = ItemUiState.Loading }
@@ -190,7 +206,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
     fun loadAllProducts(products: List<InternetItem>) {
         _allItems.value = products
     }
-    //Function for Login and Register
+    /**
+     * Logs the user in by syncing with the backend.
+     */
     fun login(u: String, p: String) {
         viewModelScope.launch {
             _loading.value = true
@@ -208,7 +226,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
     }
 
-    //Function for Logout and clearing data when logout is clicked
+    /**
+     * Logs the user out and clears session data.
+     */
     fun logout() {
         sessionManager.logout()
         _user.value = null
@@ -217,10 +237,14 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         _logoutClicked.value = false
     }
 
-    // Function to clear all data, including logout
+    /**
+     * Clears all temporary state including logout.
+     */
     fun clearData() { logout() }
 
-    // Function to register a new user and log them in
+    /**
+     * Registers a new user and automatically logs them in on success.
+     */
     fun register(u: String, e: String, p: String) {
         viewModelScope.launch {
             _loading.value = true
@@ -232,7 +256,9 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         }
     }
 
-    // Function to show a fake payment complete animation
+    /**
+     * Completes a mock payment process and generates an order record locally.
+     */
     fun completePayment() {
         if (_cartItems.value.isNotEmpty()) {
             val order = Order(items = _cartItems.value, timestamp = System.currentTimeMillis())
@@ -242,10 +268,14 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
         _showPaymentScreen.value = false
     }
 
-    // Function to removed the item from cart when payment animation will end
-    // and update the cart and added to order screen
-    // Function to remove the item from cart and update counts locally or refresh
+    /**
+     * Decreases the quantity of an item in the cart or removes it if < 1.
+     * @param item The affected CartItemResponse.
+     */
     fun decreaseItemCount(item: com.grocart.first.data.CartItemResponse) {
+        val userId = _user.value?.id ?: return
+        
+        // Optimistically update the UI to prevent stutter during rapid taps
         _cartItems.update { current ->
             val list = current.toMutableList()
             val idx = list.indexOfFirst { it.itemName == item.itemName }
@@ -258,6 +288,21 @@ class GroViewModel(private val sessionManager: SessionManager) : ViewModel() {
                 }
             }
             list
+        }
+
+        // Sync with backend
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = FirstApi.retrofitService.decreaseCartItem(
+                    userId = userId,
+                    item = item.toInternetItem()
+                )
+                if (response.isSuccessful) {
+                    loadUserCart() // Reload properly to ensure exact sync
+                }
+            } catch (e: Exception) {
+                Log.e("GROCART_DEBUG", "Decrease Cart error: ${e.message}")
+            }
         }
     }
 }

@@ -19,6 +19,13 @@ public class OrderController {
     @Autowired
     private CartRepository cartRepository;
 
+    /**
+     * Places an order for a user by moving items from cart to order history and clearing the cart.
+     *
+     * @param userId The ID of the user placing the order.
+     * @param total The total amount of the order.
+     * @return ResponseEntity with success or error message.
+     */
     @Transactional
     @PostMapping("/place/{userId}")
     public ResponseEntity<String> placeOrder(@PathVariable Long userId, @RequestBody Integer total) {

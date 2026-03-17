@@ -14,11 +14,22 @@ public class ItemController {
     @Autowired
     private ItemRepository repository;
 
+    /**
+     * Fetches all available grocery items.
+     *
+     * @return A list of all InternetItem objects.
+     */
     @GetMapping("/items.json")
     public List<InternetItem> getAllItems() {
         return repository.findAll();
     }
 
+    /**
+     * Adds a new grocery item to the repository.
+     *
+     * @param item The item details to be added.
+     * @return The saved InternetItem object.
+     */
     @PostMapping("/add")
     public InternetItem addItem(@RequestBody InternetItem item) {
         return repository.save(item);

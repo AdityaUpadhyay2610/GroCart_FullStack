@@ -1,7 +1,7 @@
 package com.example.grocart_backend.model;
 
 import jakarta.persistence.*;
-import lombok.Data; // If using Lombok, otherwise generate getters/setters
+import lombok.Data;
 
 @Entity
 @Data
@@ -17,7 +17,7 @@ public class InternetItem {
     private String itemQuantity;
 
 
-    private Integer itemPrice; // Using Integer instead of int is safer for JSON parsing
+    private Integer itemPrice;
 
     private String imageUrl;
 }

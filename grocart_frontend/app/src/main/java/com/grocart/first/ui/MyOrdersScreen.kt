@@ -22,8 +22,15 @@ import coil.compose.AsyncImage
 import com.grocart.first.R
 import com.grocart.first.data.InternetItem
 import com.grocart.first.data.Order
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalContext
+import com.grocart.first.utils.PdfGenerator
 
 @Composable
 fun MyOrdersScreen(groViewModel: GroViewModel) {
@@ -46,7 +53,6 @@ fun MyOrdersScreen(groViewModel: GroViewModel) {
             }
         }
     } else {
-        // UI for when there are no orders
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -72,19 +78,18 @@ fun MyOrdersScreen(groViewModel: GroViewModel) {
     }
 }
 
-// ✅ UPDATED: OrderCard now shows total price and handles aggregated items
 @Composable
 fun OrderCard(order: Order) {
-    // Group items within the order to get quantities
     val itemsWithQuantity = order.items
-        .groupBy { it.itemName } // Group by name (or a unique ID if you have one)
+        .groupBy { it.itemName }
         .map { (_, items) ->
-            // For each group, create an object with the item and its count
             com.grocart.first.data.InternetItemWithQuantity(items.first().toInternetItem(), items.size)
         }
 
-    // Calculate the total price of this specific order
     val orderTotal = order.items.sumOf { it.itemPrice }
+
+    val context = LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -92,7 +97,6 @@ fun OrderCard(order: Order) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // --- Order Header ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -104,27 +108,43 @@ fun OrderCard(order: Order) {
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF008069)
                 )
-                // ✅ ADDED: Display the total price for this order
                 Text(
                     text = "Total: Rs. $orderTotal",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
             }
+            
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // --- List of items in the order ---
             itemsWithQuantity.forEach { itemWithQuantity ->
                 OrderItemRow(
                     item = itemWithQuantity.internetItem,
                     quantity = itemWithQuantity.quantity
                 )
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            OutlinedButton(
+                onClick = {
+                    coroutineScope.launch {
+                        PdfGenerator.generateInvoicePdf(context, order)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = "Download Invoice",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Download Invoice")
+            }
         }
     }
 }
 
-// ✅ UPDATED: OrderItemRow now accepts a quantity
 @Composable
 fun OrderItemRow(item: InternetItem, quantity: Int) {
     Row(
@@ -144,7 +164,6 @@ fun OrderItemRow(item: InternetItem, quantity: Int) {
                 .padding(horizontal = 12.dp)
         ) {
             Text(text = item.itemName, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            // ✅ ADDED: Show quantity if more than 1
             if (quantity > 1) {
                 Text(
                     text = "Quantity: $quantity",
@@ -154,12 +173,10 @@ fun OrderItemRow(item: InternetItem, quantity: Int) {
                 )
             }
         }
-        // Price for a single item
         Text(text = "Rs. ${item.itemPrice}", fontWeight = FontWeight.Medium)
     }
 }
 
-// Helper function to format the timestamp
 private fun formatTimestamp(timestamp: Long): String {
     val sdf = SimpleDateFormat("dd MMM, yyyy 'at' hh:mm a", Locale.getDefault())
     val date = Date(timestamp)

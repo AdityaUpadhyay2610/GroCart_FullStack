@@ -52,7 +52,6 @@ fun ItemScreen(
     val groUiState by groViewModel.uiState.collectAsState()
     val selectedCategory = stringResource(groUiState.selectedCategory)
 
-    // ✅ Animation state observe
     val animatingItem by groViewModel.animatingItem.collectAsState()
 
     val database = remember(items, selectedCategory) {
@@ -101,7 +100,6 @@ fun ItemScreen(
             }
         }
 
-        // ✅ Flying Animation Overlay
         animatingItem?.let { item ->
             FlyingItemAnimation(item)
         }

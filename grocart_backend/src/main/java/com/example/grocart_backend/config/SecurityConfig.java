@@ -17,10 +17,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // New Lambda syntax for CSRF
                 .csrf(csrf -> csrf.disable())
 
-                // New Lambda syntax for Authorization
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 );

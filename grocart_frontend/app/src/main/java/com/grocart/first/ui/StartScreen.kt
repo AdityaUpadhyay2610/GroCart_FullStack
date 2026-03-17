@@ -26,7 +26,6 @@ fun StartScreen(
     onCategoryClicked: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    // We now use the static list since the global search handles filtering
     val allCategories = remember { DataSource.loadCategories() }
 
     Column(Modifier.fillMaxSize()) {
@@ -36,7 +35,6 @@ fun StartScreen(
             verticalArrangement = Arrangement.spacedBy(5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            // "Shop By Category" Header
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Column(
                     modifier = Modifier
@@ -71,7 +69,6 @@ fun StartScreen(
                 }
             }
 
-            // Category Items
             items(allCategories) { item ->
                 CategoryCard(
                     context = context,
