@@ -1,0 +1,95 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/adity/.gradle/wrapper/dists/gradle-8.9-bin/90cnw93cvbtalezasaz0blq0a/gradle-8.9/lib/native-platform-0.22-milestone-26.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 36
+
+This Android Gradle plugin (8.7.3) was tested up to compileSdk = 35.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 36.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 36 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36
+to this project's gradle.properties.
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:processDebugManifestForPackage
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:processDebugResources
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/CartScreen.kt:143:41 Argument type mismatch: actual type is 'kotlin.collections.List<com.grocart.first.data.CartItemResponse>', but 'kotlin.Int' was expected.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/CartScreen.kt:144:17 Unresolved reference 'coroutineScope'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/CartScreen.kt:144:39 Unresolved reference 'show'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/CartScreen.kt:145:21 Unresolved reference 'Toast'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/CartScreen.kt:145:36 Unresolved reference 'context'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/CartScreen.kt:145:74 Unresolved reference 'Toast'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:136:29 Unresolved reference 'Toast'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:136:80 Unresolved reference 'Toast'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:137:29 Unresolved reference 'openPdfWithIntent'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:139:29 Unresolved reference 'Toast'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:139:83 Unresolved reference 'Toast'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:144:26 Unresolved reference 'ButtonDefaults'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/MyOrdersScreen.kt:145:26 Unresolved reference 'BorderStroke'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:98:51 Unresolved reference 'itemsIndexed'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:98:81 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:98:88 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:99:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:101:45 Unresolved reference 'stringResourceId'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:102:44 Unresolved reference 'imageResourceId'.
+e: file:///C:/Users/adity/Documents/GroCart-FullStack/grocart_frontend/app/src/main/java/com/grocart/first/ui/StartScreen.kt:105:58 None of the following candidates is applicable:
+fun BigDecimal.rem(other: BigDecimal): BigDecimal
+fun BigInteger.rem(other: BigInteger): BigInteger
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 20s
+29 actionable tasks: 5 executed, 24 up-to-date

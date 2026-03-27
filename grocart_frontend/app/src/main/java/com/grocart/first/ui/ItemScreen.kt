@@ -17,6 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,6 +32,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.grocart.first.R
 import com.grocart.first.data.InternetItem
+import com.grocart.first.ui.theme.AestheticBackgroundStart
+import com.grocart.first.ui.theme.AestheticBackgroundEnd
 
 @Composable
 fun InternetItemScreen(
@@ -65,12 +71,12 @@ fun ItemScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(AestheticBackgroundStart, AestheticBackgroundEnd)))) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(150.dp),
-            contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
 
@@ -147,56 +153,72 @@ fun ItemCard(
 ) {
     val context = LocalContext.current
 
-    Column(modifier = Modifier.width(150.dp).padding(8.dp)) {
-        Card(
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier.fillMaxWidth().padding(4.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFEEEEEE))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box {
                 AsyncImage(
                     model = imageUrl,
                     contentDescription = itemName,
-                    modifier = Modifier.fillMaxWidth().height(110.dp)
+                    modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
                 )
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(244, 67, 54, 255)),
-                        shape = RoundedCornerShape(bottomStart = 8.dp)
-                    ) {
-                        Text(text = "25% off", fontSize = 12.sp, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                    }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = itemName,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().height(40.dp)
+            )
+            Text(
+                text = quantityLabel,
+                fontSize = 12.sp,
+                color = Color.Gray,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(text = "Rs. $itemPrice", fontSize = 10.sp, color = Color.Gray, textDecoration = TextDecoration.LineThrough)
+                    Text(text = "Rs. ${itemPrice * 75 / 100}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFFEDE9FE), RoundedCornerShape(4.dp))
+                        .clickable {
+                            val currentItem = InternetItem(
+                                itemName = itemName,
+                                imageUrl = imageUrl,
+                                itemQuantity = quantityLabel,
+                                itemPrice = itemPrice,
+                                itemCategory = itemCategory
+                            )
+                            groViewModel.triggerAddToCartAnimation(currentItem)
+                            groViewModel.addToCart(currentItem)
+                            // The user's snippet had item.name and item, but the original code uses currentItem and itemName.
+                            // Keeping the original logic for Toast message to avoid breaking functionality.
+                            Toast.makeText(context, "Added", Toast.LENGTH_SHORT).show()
+                        }
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Text("ADD", color = Color(0xFF7C3AED), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
-        }
-
-        Text(text = itemName, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 5.dp), maxLines = 1)
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text(text = "Rs. $itemPrice", fontSize = 12.sp, color = Color.Gray, textDecoration = TextDecoration.LineThrough)
-                Text(text = "Rs. ${itemPrice * 75 / 100}", fontSize = 20.sp, color = Color(255, 116, 105, 255))
-            }
-            Text(text = quantityLabel, fontSize = 14.sp, modifier = Modifier.align(Alignment.CenterVertically))
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth().clickable {
-                val currentItem = InternetItem(
-                    itemName = itemName,
-                    imageUrl = imageUrl,
-                    itemQuantity = quantityLabel,
-                    itemPrice = itemPrice,
-                    itemCategory = itemCategory
-                )
-                groViewModel.triggerAddToCartAnimation(currentItem)
-                groViewModel.addToCart(currentItem)
-
-                Toast.makeText(context, "Added to Cart", Toast.LENGTH_SHORT).show()
-            },
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
-        ) {
-            Text(text = "Add to Cart", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
         }
     }
 }

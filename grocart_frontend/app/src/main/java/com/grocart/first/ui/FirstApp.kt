@@ -1,6 +1,22 @@
 package com.grocart.first.ui
 
 import android.util.Log
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.Locale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +32,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -35,10 +54,11 @@ import com.grocart.first.data.DataSource
 
 /** Enum class to define available screens and their titles */
 enum class GroAppScreen(val title: String) {
-    Start("GroCart"),
-    Item("Choose Items"),
-    Cart("Your Cart"),
-    Orders("My Orders")
+    Start("Home"),
+    Item("Items"),
+    Cart("Cart"),
+    Orders("My Orders"),
+    Profile("Edit Profile")
 }
 
 var canNavigateBack = false
@@ -69,71 +89,15 @@ fun FirstApp(
     } else {
         Scaffold(
             topBar = {
-                Column {
-                    TopAppBar(
-                        title = {
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = currentScreen.title,
-                                        fontSize = 26.sp,
-                                        fontFamily = FontFamily.SansSerif,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(start = 16.dp, top = 8.dp)
-                                    )
-                                    if (currentScreen == GroAppScreen.Cart) {
-                                        Text(
-                                            text = " (${cartItems.size})",
-                                            fontSize = 26.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                }
-
-                                Row(modifier = Modifier.clickable { groViewModel.setLogoutClicked(true) }) {
-                                    Icon(painter = painterResource(R.drawable.logout), contentDescription = "Logout", modifier = Modifier.size(24.dp))
-                                    Text(text = "Logout", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 2.dp))
-                                }
-                            }
-                        },
-                        navigationIcon = {
-                            if (canNavigateBack) {
-                                IconButton(onClick = { navController.navigateUp() }) {
-                                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                                }
-                            }
-                        }
-                    )
-
-                    if (currentScreen == GroAppScreen.Start || currentScreen == GroAppScreen.Item) {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            placeholder = { Text("Search 'Milk', 'Bread'...") },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(Icons.Default.Clear, contentDescription = "Clear")
-                                    }
-                                }
-                            },
-                            shape = MaterialTheme.shapes.medium,
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = Color.LightGray
-                            )
-                        )
-                    }
-                }
+                FirstAppTopHeader(
+                    currentScreen = currentScreen,
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    onProfileClick = { navController.navigate(GroAppScreen.Profile.name) },
+                    onLogoutClick = { groViewModel.setLogoutClicked(true) },
+                    canNavigateBack = canNavigateBack,
+                    onNavigateUp = { navController.navigateUp() }
+                )
             },
             bottomBar = {
                 FirstAppBar(navController = navController, currentScreen = currentScreen, cartItems = cartItems, groViewModel = groViewModel)
@@ -155,10 +119,18 @@ fun FirstApp(
                             navController.navigate(GroAppScreen.Start.name) { popUpTo(0) }
                         })
                     }
-                    composable(route = GroAppScreen.Orders.name) {
-                        MyOrdersScreen(groViewModel = groViewModel)
-                    }
-                }
+                    composable(GroAppScreen.Orders.name) {
+                MyOrdersScreen(
+                    groViewModel = groViewModel
+                )
+            }
+            composable(GroAppScreen.Profile.name) {
+                ProfileScreen(
+                    groViewModel = groViewModel,
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
+        }
 
                 if (searchQuery.isNotEmpty()) {
                     Surface(
@@ -233,45 +205,41 @@ fun FirstAppBar(
     val isGuest by groViewModel.isGuestSession.collectAsState()
     var showLoginPrompt by remember { mutableStateOf(false) }
 
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 8.dp
+    Surface(
+        color = Color.White,
+        shadowElevation = 16.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Outlined.Home, "Home") },
-            label = { Text("Home") },
-            selected = currentScreen == GroAppScreen.Start,
-            onClick = { navController.navigate(GroAppScreen.Start.name) { popUpTo(0) } }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.AutoMirrored.Outlined.List, "Orders") },
-            label = { Text("Orders") },
-            selected = currentScreen == GroAppScreen.Orders,
-            onClick = {
-                if (isGuest) showLoginPrompt = true
-                else navController.navigate(GroAppScreen.Orders.name) { popUpTo(0) }
-            }
-        )
-
-        NavigationBarItem(
-            icon = {
-                BadgedBox(
-                    badge = {
-                        if (cartItems.isNotEmpty()) {
-                            Badge(containerColor = Color.Red) {
-                                Text(cartItems.size.toString(), color = Color.White)
-                            }
-                        }
-                    }
-                ) {
-                    Icon(Icons.Outlined.ShoppingCart, "Cart")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AnimatedBottomNavItem(
+                title = "Home",
+                icon = Icons.Outlined.Home,
+                isSelected = currentScreen == GroAppScreen.Start,
+                onClick = { navController.navigate(GroAppScreen.Start.name) { popUpTo(0) } }
+            )
+            AnimatedBottomNavItem(
+                title = "Orders",
+                icon = Icons.AutoMirrored.Outlined.List,
+                isSelected = currentScreen == GroAppScreen.Orders,
+                onClick = {
+                    if (isGuest) showLoginPrompt = true
+                    else navController.navigate(GroAppScreen.Orders.name) { popUpTo(0) }
                 }
-            },
-            label = { Text("Cart") },
-            selected = currentScreen == GroAppScreen.Cart,
-            onClick = { navController.navigate(GroAppScreen.Cart.name) }
-        )
+            )
+            AnimatedBottomNavItem(
+                title = "Cart",
+                icon = Icons.Outlined.ShoppingCart,
+                isSelected = currentScreen == GroAppScreen.Cart,
+                badgeCount = cartItems.size,
+                onClick = { navController.navigate(GroAppScreen.Cart.name) }
+            )
+        }
     }
 
     if (showLoginPrompt) {
@@ -282,6 +250,53 @@ fun FirstAppBar(
             confirmButton = { TextButton(onClick = { groViewModel.endGuestSession(); showLoginPrompt = false }) { Text("Login") } },
             dismissButton = { TextButton(onClick = { showLoginPrompt = false }) { Text("Cancel") } }
         )
+    }
+}
+
+@Composable
+fun AnimatedBottomNavItem(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isSelected: Boolean,
+    badgeCount: Int = 0,
+    onClick: () -> Unit
+) {
+    val background = if (isSelected) Color(0xFFF0FDF4) else Color.Transparent
+    val contentColor = if (isSelected) Color(0xFF7C3AED) else Color.Gray
+
+    Box(
+        modifier = Modifier
+            .clip(androidx.compose.foundation.shape.CircleShape)
+            .background(background)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            BadgedBox(
+                badge = {
+                    if (badgeCount > 0) {
+                        Badge(containerColor = Color.Red) {
+                            Text(badgeCount.toString(), color = Color.White)
+                        }
+                    }
+                }
+            ) {
+                Icon(icon, contentDescription = title, tint = contentColor)
+            }
+
+            AnimatedVisibility(visible = isSelected) {
+                Text(
+                    text = title,
+                    color = contentColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
     }
 }
 
@@ -302,4 +317,190 @@ fun AlertCheck(onYesButtonPressed: () -> Unit, onNoButtonPressed: () -> Unit) {
         confirmButton = { TextButton(onClick = onYesButtonPressed) { Text("Yes") } },
         dismissButton = { TextButton(onClick = onNoButtonPressed) { Text("No") } }
     )
+}
+
+@Composable
+fun FirstAppTopHeader(
+    currentScreen: GroAppScreen,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onProfileClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    canNavigateBack: Boolean,
+    onNavigateUp: () -> Unit
+) {
+    val context = LocalContext.current
+    var locationText by remember { mutableStateOf("Fetching location...") }
+    var locationPermissionGranted by remember { 
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || 
+                                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+    LaunchedEffect(locationPermissionGranted) {
+        if (!locationPermissionGranted) {
+            permissionLauncher.launch(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
+            locationText = "Location Required"
+        } else {
+            try {
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                val providers = locationManager.getProviders(true)
+                var bestLocation: Location? = null
+                for (provider in providers) {
+                    val l = locationManager.getLastKnownLocation(provider) ?: continue
+                    if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
+                        bestLocation = l
+                    }
+                }
+                
+                if (bestLocation != null) {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val geocoder = Geocoder(context, Locale.getDefault())
+                            val addresses = geocoder.getFromLocation(bestLocation.latitude, bestLocation.longitude, 1)
+                            if (addresses != null && addresses.isNotEmpty()) {
+                                val address = addresses[0]
+                                locationText = "${address.subLocality ?: address.locality ?: "Unknown"}, ${address.adminArea ?: ""}"
+                            } else {
+                                locationText = "Location not found"
+                            }
+                        } catch (e: Exception) {
+                            locationText = "Location unavailable"
+                        }
+                    }
+                } else {
+                    locationText = "Please enable GPS"
+                }
+            } catch (e: SecurityException) {
+                locationText = "Permission denied"
+            }
+        }
+    }
+
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    Surface(color = Color.White, shadowElevation = 0.dp) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            // Location and Profile Row
+            Row(
+                modifier = Modifier.fillMaxWidth().background(Color.Transparent),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (canNavigateBack) {
+                    IconButton(onClick = onNavigateUp, modifier = Modifier.size(32.dp)) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "Location",
+                        tint = Color(0xFF7C3AED),
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (currentScreen == GroAppScreen.Start) "Grocery in 10 minutes" else currentScreen.title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Drop Down",
+                            tint = Color.Black
+                        )
+                    }
+                    Text(
+                        text = "Home - $locationText",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        maxLines = 1
+                    )
+                }
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profile",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        containerColor = Color.White
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit Profile", fontWeight = FontWeight.Medium) },
+                            onClick = {
+                                menuExpanded = false
+                                onProfileClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Logout", color = Color.Red, fontWeight = FontWeight.Bold) },
+                            onClick = {
+                                menuExpanded = false
+                                onLogoutClick()
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Search Bar (Only on Start and Item screens)
+            if (currentScreen == GroAppScreen.Start || currentScreen == GroAppScreen.Item) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon",
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        androidx.compose.foundation.text.BasicTextField(
+                            value = searchQuery,
+                            onValueChange = onSearchQueryChange,
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 16.sp, color = Color.Black),
+                            decorationBox = { innerTextField ->
+                                if (searchQuery.isEmpty()) {
+                                    Text("Search \"milk\", \"bread\"...", color = Color.Gray, fontSize = 16.sp)
+                                }
+                                innerTextField()
+                            }
+                        )
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { onSearchQueryChange("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color.Gray)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

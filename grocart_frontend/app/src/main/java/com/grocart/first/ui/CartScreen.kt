@@ -33,6 +33,8 @@ import coil.compose.AsyncImage
 import com.grocart.first.R
 import com.grocart.first.data.CartItemResponse
 import com.grocart.first.data.InternetItem
+import com.grocart.first.ui.theme.AestheticBackgroundStart
+import com.grocart.first.ui.theme.AestheticBackgroundEnd
 import kotlinx.coroutines.delay
 
 @Composable
@@ -44,7 +46,7 @@ fun CartScreen(
     val cartItems by groViewModel.cartItems.collectAsState()
     val showPaymentScreen by groViewModel.showPaymentScreen.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(AestheticBackgroundStart, AestheticBackgroundEnd)))) {
         if (cartItems.isNotEmpty()) {
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
@@ -88,57 +90,64 @@ fun CartScreen(
                 val grandTotal = totalPrice + handlingCharge + deliveryFee
 
                 item {
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-                        colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFFFDFDFD)),
-                        shape = RoundedCornerShape(4.dp)
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 80.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color(0xFFEEEEEE))
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("GROCART RECEIPT", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
-                            Text("- - - - - - - - - - - - - - - - - - - -", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Gray, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Clip)
+                            Text("Bill Details", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             cartItems.forEach { cartItem ->
                                 val lineItemPrice = (cartItem.itemPrice * 75 / 100)
                                 val lineTotal = lineItemPrice * cartItem.quantity
-                                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                                     val leftText = "${cartItem.quantity}x ${cartItem.itemName}"
-                                    val displayName = if (leftText.length > 20) leftText.take(17) + "..." else leftText
-                                    Text(text = displayName, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 14.sp, color = Color.DarkGray)
-                                    Text(text = "$lineTotal", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 14.sp, color = Color.Black)
+                                    val displayName = if (leftText.length > 25) leftText.take(22) + "..." else leftText
+                                    Text(text = displayName, fontSize = 14.sp, color = Color.DarkGray)
+                                    Text(text = "Rs. $lineTotal", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Medium)
                                 }
                             }
                             
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("- - - - - - - - - - - - - - - - - - - -", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Gray, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Clip)
+                            HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            BillRow("Subtotal:", totalPrice, FontWeight.Normal)
-                            BillRow("Handling:", handlingCharge, FontWeight.Normal)
-                            BillRow("Delivery:", deliveryFee, FontWeight.Normal)
+                            BillRow("Item Total", totalPrice, FontWeight.Normal)
+                            BillRow("Handling Charge", handlingCharge, FontWeight.Normal)
+                            BillRow("Delivery Fee", deliveryFee, FontWeight.Normal)
                             
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("- - - - - - - - - - - - - - - - - - - -", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Gray, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Clip)
+                            HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            BillRow("TOTAL:", grandTotal, FontWeight.Bold)
-                            
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("THANK YOU!", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 14.sp, color = Color.DarkGray)
-                            
-                            Button(
-                                onClick = { groViewModel.proceedToPay() },
-                                modifier = Modifier.fillMaxWidth().padding(top = 24.dp).height(50.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                            ) {
-                                Text("Proceed to Pay", fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.White)
-                            }
+                            BillRow("To Pay", grandTotal, FontWeight.ExtraBold)
                         }
                     }
-                    Spacer(modifier = Modifier.height(100.dp)) // Avoid nav bar overlap
                 }
+            } // end of LazyColumn
+
+            // Pinned Bottom Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(Color.White)
+                    .padding(16.dp)
+            ) {
+                val totalPrice = cartItems.sumOf { (it.itemPrice * 75 / 100) * it.quantity }
+                val grandTotal = totalPrice + (totalPrice * 0.01).toInt() + 30
+                Button(
+            onClick = { groViewModel.proceedToPay() },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Proceed to Pay  •  Rs. $grandTotal", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
             }
         } else {
             EmptyCartUI(onHomeButtonClicked)
@@ -201,10 +210,12 @@ fun CartCard(
 ) {
     val lineItemTotalPrice = (item.itemPrice * 75 / 100) * quantity
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFEEEEEE))
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -215,21 +226,21 @@ fun CartCard(
                 contentDescription = item.itemName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(70.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(Color(0xFFF5F5F5))
             )
             Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text(text = item.itemName, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = "Rs. ${item.itemPrice * 75 / 100} / each", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = item.itemName, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, color = Color.Black)
+                Text(text = "Rs. ${item.itemPrice * 75 / 100}", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 QuantitySelector(quantity = quantity, onAddItem = onAddItem, onRemoveItem = onRemoveItem)
                 Text(
                     text = "Rs. $lineItemTotalPrice",
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color.Black
                 )
             }
         }
@@ -318,11 +329,11 @@ fun FakePaymentScreen(
     }
 }
 
-// Helper function for Billing - Styled as Receipt
+// Helper function for Billing - Styled nicely
 @Composable
 fun BillRow(itemName: String, itemPrice: Int, fontWeight: FontWeight) {
-    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
-        Text(text = itemName, fontWeight = fontWeight, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black, fontSize = 14.sp)
-        Text(text = "Rs. $itemPrice", fontWeight = fontWeight, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black, fontSize = 14.sp)
+    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Text(text = itemName, fontWeight = fontWeight, color = Color.DarkGray, fontSize = 14.sp)
+        Text(text = "Rs. $itemPrice", fontWeight = fontWeight, color = Color.Black, fontSize = 14.sp)
     }
 }

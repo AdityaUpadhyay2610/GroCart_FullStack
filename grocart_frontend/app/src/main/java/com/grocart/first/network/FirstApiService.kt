@@ -17,7 +17,8 @@ data class UserResponse(val id: Long, val username: String, val email: String)
 @Serializable
 data class CartRequest(val userId: Long, val itemName: String, val itemPrice: Int, val imageUrl: String, val quantity: Int = 1)
 
-private const val BASE_URL = "http://10.0.2.2:8080"
+// TODO: Replace with your Railway URL after deploying (e.g. "https://grocart-backend.up.railway.app")
+private const val BASE_URL = "https://YOUR-APP-NAME.up.railway.app"
 private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
 

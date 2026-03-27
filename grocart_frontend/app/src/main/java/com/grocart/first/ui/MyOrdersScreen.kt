@@ -1,6 +1,7 @@
 package com.grocart.first.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,50 +31,70 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.platform.LocalContext
+import com.grocart.first.ui.theme.AestheticBackgroundStart
+import com.grocart.first.ui.theme.AestheticBackgroundEnd
+import com.grocart.first.ui.theme.ModernPrimary
 import com.grocart.first.utils.PdfGenerator
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun MyOrdersScreen(groViewModel: GroViewModel) {
     val orders by groViewModel.orders.collectAsState()
 
-    if (orders.isNotEmpty()) {
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            item {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(AestheticBackgroundStart, AestheticBackgroundEnd)))
+    ) {
+        if (orders.isNotEmpty()) {
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Order History",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF1E293B),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                items(orders.reversed()) { order ->
+                    OrderCard(order = order)
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.empty_box),
+                    contentDescription = "No Orders",
+                    modifier = Modifier.size(180.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Your Past Orders",
+                    text = "No Orders Yet",
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF1E293B)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Your shopping journey hasn't started yet. Let's find something for you!",
+                    fontSize = 15.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
                 )
             }
-            items(orders.reversed()) { order ->
-                OrderCard(order = order)
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.empty_box),
-                contentDescription = "No Orders",
-                modifier = Modifier.size(150.dp)
-            )
-            Text(
-                text = "No Orders Yet",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-            Text(
-                text = "Items you purchase will appear here.",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
         }
     }
 }
@@ -93,7 +114,9 @@ fun OrderCard(order: Order) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -102,20 +125,34 @@ fun OrderCard(order: Order) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = formatTimestamp(order.timestamp),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF008069)
-                )
-                Text(
-                    text = "Total: Rs. $orderTotal",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                Column {
+                    Text(
+                        text = formatTimestamp(order.timestamp),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF64748B)
+                    )
+                    Text(
+                        text = "Order #${order.timestamp.toString().takeLast(6)}",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+                Surface(
+                    color = Color(0xFFF0FDF4),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "₹$orderTotal",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF16A34A),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
             
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 1.dp, color = Color(0xFFF1F5F9))
 
             itemsWithQuantity.forEach { itemWithQuantity ->
                 OrderItemRow(
@@ -124,7 +161,7 @@ fun OrderCard(order: Order) {
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
                 onClick = {
@@ -132,14 +169,19 @@ fun OrderCard(order: Order) {
                         PdfGenerator.generateInvoicePdf(context, order)
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = ModernPrimary),
+                border = BorderStroke(1.dp, ModernPrimary)
             ) {
                 Icon(
                     imageVector = Icons.Default.Download,
                     contentDescription = "Download Invoice",
-                    modifier = Modifier.padding(end = 8.dp)
+                    tint = ModernPrimary,
+                    modifier = Modifier.size(18.dp)
                 )
-                Text("Download Invoice")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Invoice", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -156,24 +198,21 @@ fun OrderItemRow(item: InternetItem, quantity: Int) {
         AsyncImage(
             model = item.imageUrl,
             contentDescription = item.itemName,
-            modifier = Modifier.size(50.dp)
+            modifier = Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFF8FAFC))
         )
         Column(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 12.dp)
         ) {
-            Text(text = item.itemName, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            if (quantity > 1) {
-                Text(
-                    text = "Quantity: $quantity",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Text(text = item.itemName, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF334155))
+            Text(
+                text = "Qty: $quantity",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
         }
-        Text(text = "Rs. ${item.itemPrice}", fontWeight = FontWeight.Medium)
+        Text(text = "₹${item.itemPrice * quantity}", fontWeight = FontWeight.SemiBold, color = Color(0xFF1E293B))
     }
 }
 

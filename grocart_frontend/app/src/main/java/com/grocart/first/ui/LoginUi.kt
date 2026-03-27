@@ -2,6 +2,7 @@ package com.grocart.first.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +18,9 @@ import com.grocart.first.R
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import com.grocart.first.ui.theme.AestheticBackgroundStart
+import com.grocart.first.ui.theme.AestheticBackgroundEnd
 
 @Composable
 fun LoginUi(groViewModel: GroViewModel) {
@@ -29,7 +33,7 @@ fun LoginUi(groViewModel: GroViewModel) {
     val context = LocalContext.current
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(AestheticBackgroundStart, AestheticBackgroundEnd))).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
