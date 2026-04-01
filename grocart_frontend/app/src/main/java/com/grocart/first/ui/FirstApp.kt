@@ -21,13 +21,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,6 +42,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +73,8 @@ enum class GroAppScreen(val title: String) {
     Item("Items"),
     Cart("Cart"),
     Orders("My Orders"),
-    Profile("Edit Profile")
+    Profile("Edit Profile"),
+    Category("Categories")
 }
 
 var canNavigateBack = false
@@ -120,17 +136,24 @@ fun FirstApp(
                         })
                     }
                     composable(GroAppScreen.Orders.name) {
-                MyOrdersScreen(
-                    groViewModel = groViewModel
-                )
-            }
-            composable(GroAppScreen.Profile.name) {
-                ProfileScreen(
-                    groViewModel = groViewModel,
-                    onNavigateBack = { navController.navigateUp() }
-                )
-            }
-        }
+                        MyOrdersScreen(groViewModel = groViewModel)
+                    }
+                    composable(GroAppScreen.Profile.name) {
+                        ProfileScreen(
+                            groViewModel = groViewModel,
+                            onNavigateBack = { navController.navigateUp() }
+                        )
+                    }
+                    composable(GroAppScreen.Category.name) {
+                        CategoryScreen(
+                            groViewModel = groViewModel,
+                            onCategoryClicked = { cat ->
+                                groViewModel.updateSelectedCategory(cat)
+                                navController.navigate(GroAppScreen.Item.name)
+                            }
+                        )
+                    }
+                }
 
                 if (searchQuery.isNotEmpty()) {
                     Surface(
@@ -195,6 +218,47 @@ fun PredictiveResultList(
     }
 }
 
+class CurvedBottomBarShape(
+    private val cutPosition: Float,
+    private val cutRadius: Float,
+    private val cornerRadius: Float
+) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val path = Path().apply {
+            moveTo(0f, cornerRadius)
+            quadraticBezierTo(0f, 0f, cornerRadius, 0f)
+
+            val startCut = cutPosition - cutRadius * 1.6f
+            if (startCut > cornerRadius) {
+                lineTo(startCut, 0f)
+            } else {
+                lineTo(cornerRadius, 0f)
+            }
+
+            val cutDepth = cutRadius * 1.5f
+
+            cubicTo(
+                cutPosition - cutRadius * 0.9f, 0f,
+                cutPosition - cutRadius * 0.9f, cutDepth,
+                cutPosition, cutDepth
+            )
+            cubicTo(
+                cutPosition + cutRadius * 0.9f, cutDepth,
+                cutPosition + cutRadius * 0.9f, 0f,
+                cutPosition + cutRadius * 1.6f, 0f
+            )
+
+            lineTo(size.width - cornerRadius, 0f)
+            quadraticBezierTo(size.width, 0f, size.width, cornerRadius)
+
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
+        }
+        return Outline.Generic(path)
+    }
+}
+
 @Composable
 fun FirstAppBar(
     navController: NavHostController,
@@ -205,40 +269,110 @@ fun FirstAppBar(
     val isGuest by groViewModel.isGuestSession.collectAsState()
     var showLoginPrompt by remember { mutableStateOf(false) }
 
-    Surface(
-        color = Color.White,
-        shadowElevation = 16.dp,
-        modifier = Modifier.fillMaxWidth()
+    val tabs = listOf(
+        GroAppScreen.Start to Icons.Filled.Home,
+        GroAppScreen.Category to Icons.Filled.GridView,
+        GroAppScreen.Cart to Icons.Filled.ShoppingCart,
+        GroAppScreen.Orders to Icons.Filled.ShoppingBag,
+        GroAppScreen.Profile to Icons.Filled.AccountCircle
+    )
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(76.dp)
+            .background(Color.Transparent) 
     ) {
+        val widthPx = constraints.maxWidth.toFloat()
+        val itemWidth = widthPx / tabs.size
+        
+        val selectedIndex = tabs.indexOfFirst { it.first == currentScreen }.takeIf { it >= 0 } ?: 0
+        val cutPosition by animateFloatAsState(
+            targetValue = (selectedIndex * itemWidth) + (itemWidth / 2f),
+            animationSpec = spring(dampingRatio = 0.65f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
+            label = "cutout"
+        )
+        
+        val cutRadiusPx = with(LocalDensity.current) { 30.dp.toPx() }
+        val cornerRadiusPx = with(LocalDensity.current) { 24.dp.toPx() }
+        
+        // Background shape
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+                .graphicsLayer {
+                    shape = CurvedBottomBarShape(cutPosition, cutRadiusPx, cornerRadiusPx)
+                    clip = true
+                }
+                .background(Color(0xFF43A047))
+        )
+        
+        // The unselected icons
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .fillMaxSize()
+                .padding(top = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AnimatedBottomNavItem(
-                title = "Home",
-                icon = Icons.Outlined.Home,
-                isSelected = currentScreen == GroAppScreen.Start,
-                onClick = { navController.navigate(GroAppScreen.Start.name) { popUpTo(0) } }
-            )
-            AnimatedBottomNavItem(
-                title = "Orders",
-                icon = Icons.AutoMirrored.Outlined.List,
-                isSelected = currentScreen == GroAppScreen.Orders,
-                onClick = {
-                    if (isGuest) showLoginPrompt = true
-                    else navController.navigate(GroAppScreen.Orders.name) { popUpTo(0) }
+            tabs.forEachIndexed { index, pair ->
+                val (screen, icon) = pair
+                val isSelected = index == selectedIndex
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            if (screen == GroAppScreen.Orders || screen == GroAppScreen.Profile) {
+                                if (isGuest) {
+                                    showLoginPrompt = true
+                                    return@clickable
+                                }
+                            }
+                            navController.navigate(screen.name) {
+                                if (screen == GroAppScreen.Start) popUpTo(0)
+                                launchSingleTop = true
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!isSelected) {
+                        BadgedBox(
+                            badge = {
+                                if (screen == GroAppScreen.Cart && cartItems.isNotEmpty()) {
+                                    Badge(containerColor = Color.Red, modifier = Modifier.offset((-8).dp, 8.dp)) { Text(cartItems.size.toString(), color = Color.White) }
+                                }
+                            }
+                        ) {
+                            Icon(imageVector = icon, contentDescription = screen.title, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(24.dp))
+                        }
+                    }
                 }
-            )
-            AnimatedBottomNavItem(
-                title = "Cart",
-                icon = Icons.Outlined.ShoppingCart,
-                isSelected = currentScreen == GroAppScreen.Cart,
-                badgeCount = cartItems.size,
-                onClick = { navController.navigate(GroAppScreen.Cart.name) }
-            )
+            }
+        }
+        
+        // The floating circle (selected icon)
+        Box(
+            modifier = Modifier
+                .offset { IntOffset((cutPosition - 30.dp.toPx()).toInt(), (-2).dp.toPx().toInt()) }
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            val (selectedScreen, selectedIcon) = tabs[selectedIndex]
+            BadgedBox(
+                badge = {
+                    if (selectedScreen == GroAppScreen.Cart && cartItems.isNotEmpty()) {
+                        Badge(containerColor = Color.Red, modifier = Modifier.offset((-4).dp, 4.dp)) { Text(cartItems.size.toString(), color = Color.White) }
+                    }
+                }
+            ) {
+                Icon(imageVector = selectedIcon, contentDescription = "Selected", tint = Color(0xFF43A047), modifier = Modifier.size(28.dp))
+            }
         }
     }
 
@@ -246,57 +380,10 @@ fun FirstAppBar(
         AlertDialog(
             onDismissRequest = { showLoginPrompt = false },
             title = { Text("Login Required") },
-            text = { Text("Please login to see your orders.") },
+            text = { Text("Please login to access this section.") },
             confirmButton = { TextButton(onClick = { groViewModel.endGuestSession(); showLoginPrompt = false }) { Text("Login") } },
             dismissButton = { TextButton(onClick = { showLoginPrompt = false }) { Text("Cancel") } }
         )
-    }
-}
-
-@Composable
-fun AnimatedBottomNavItem(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isSelected: Boolean,
-    badgeCount: Int = 0,
-    onClick: () -> Unit
-) {
-    val background = if (isSelected) Color(0xFFF0FDF4) else Color.Transparent
-    val contentColor = if (isSelected) Color(0xFF7C3AED) else Color.Gray
-
-    Box(
-        modifier = Modifier
-            .clip(androidx.compose.foundation.shape.CircleShape)
-            .background(background)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            BadgedBox(
-                badge = {
-                    if (badgeCount > 0) {
-                        Badge(containerColor = Color.Red) {
-                            Text(badgeCount.toString(), color = Color.White)
-                        }
-                    }
-                }
-            ) {
-                Icon(icon, contentDescription = title, tint = contentColor)
-            }
-
-            AnimatedVisibility(visible = isSelected) {
-                Text(
-                    text = title,
-                    color = contentColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
     }
 }
 

@@ -38,9 +38,10 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val user by groViewModel.user.collectAsState()
     
-    var nameState by remember { mutableStateOf("Aditya Upadhyay") }
-    var emailState by remember { mutableStateOf("adityaupadhyay@example.com") }
+    var nameState by remember(user) { mutableStateOf(user?.username ?: "") }
+    var emailState by remember(user) { mutableStateOf(user?.email ?: "") }
     var phoneState by remember { mutableStateOf("+91 9876543210") }
     var addressState by remember { mutableStateOf("Sector-4, GroCart City") }
 
@@ -82,13 +83,13 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = nameState,
+                    text = nameState.ifEmpty { "User" },
                     fontSize = 26.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
                 Text(
-                    text = emailState,
+                    text = emailState.ifEmpty { "No Email" },
                     fontSize = 16.sp,
                     color = Color.White.copy(alpha = 0.8f)
                 )

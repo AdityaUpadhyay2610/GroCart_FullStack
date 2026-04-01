@@ -96,6 +96,7 @@ fun ItemScreen(
 
             items(database) { currentItem ->
                 ItemCard(
+                    itemId = currentItem.id,
                     itemName = currentItem.itemName,
                     imageUrl = currentItem.imageUrl,
                     quantityLabel = currentItem.itemQuantity,
@@ -144,6 +145,7 @@ fun FlyingItemAnimation(item: InternetItem) {
 
 @Composable
 fun ItemCard(
+    itemId: Long,
     itemName: String,
     imageUrl: String,
     quantityLabel: String,
@@ -202,6 +204,7 @@ fun ItemCard(
                         .background(Color(0xFFEDE9FE), RoundedCornerShape(4.dp))
                         .clickable {
                             val currentItem = InternetItem(
+                                id = itemId,
                                 itemName = itemName,
                                 imageUrl = imageUrl,
                                 itemQuantity = quantityLabel,

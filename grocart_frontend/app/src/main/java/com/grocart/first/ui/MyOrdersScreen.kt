@@ -107,7 +107,7 @@ fun OrderCard(order: Order) {
             com.grocart.first.data.InternetItemWithQuantity(items.first().toInternetItem(), items.size)
         }
 
-    val orderTotal = order.items.sumOf { it.itemPrice }
+    val orderTotal = order.items.sumOf { it.itemPrice * 75 / 100 }
 
     val context = LocalContext.current
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -212,7 +212,7 @@ fun OrderItemRow(item: InternetItem, quantity: Int) {
                 color = Color.Gray
             )
         }
-        Text(text = "₹${item.itemPrice * quantity}", fontWeight = FontWeight.SemiBold, color = Color(0xFF1E293B))
+        Text(text = "₹${(item.itemPrice * 75 / 100) * quantity}", fontWeight = FontWeight.SemiBold, color = Color(0xFF1E293B))
     }
 }
 

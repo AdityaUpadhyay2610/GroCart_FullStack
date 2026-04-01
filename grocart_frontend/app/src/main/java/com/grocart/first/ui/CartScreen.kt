@@ -66,7 +66,7 @@ fun CartScreen(
                         item = item,
                         quantity = item.quantity,
                         onAddItem = { 
-                            val baseItem = InternetItem(itemName = item.itemName, itemPrice = item.itemPrice, imageUrl = item.imageUrl)
+                            val baseItem = InternetItem(id = item.id, itemName = item.itemName, itemPrice = item.itemPrice, imageUrl = item.imageUrl)
                             groViewModel.addToCart(baseItem) 
                         },
                         onRemoveItem = { groViewModel.decreaseItemCount(item) }

@@ -10,12 +10,12 @@ class SessionManager(context: Context) {
 
     /**
      * Saves user session details to SharedPreferences.
-     * @param userId ID of the logged-in user.
+     * @param userId ID of the logged-in user (Firebase UID).
      * @param username Username.
      */
-    fun saveUserSession(userId: Long, username: String) {
+    fun saveUserSession(userId: String, username: String) {
         prefs.edit {
-            putLong("USER_ID", userId)
+            putString("USER_ID", userId)
             putString("USERNAME", username)
         }
     }
@@ -23,9 +23,9 @@ class SessionManager(context: Context) {
 
     /**
      * Gets the current user ID.
-     * @return User ID or -1 if not logged in.
+     * @return User ID or null if not logged in.
      */
-    fun getUserId(): Long = prefs.getLong("USER_ID", -1L)
+    fun getUserId(): String? = prefs.getString("USER_ID", null)
 
     /**
      * Gets the current user name.
